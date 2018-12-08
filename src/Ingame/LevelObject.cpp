@@ -7,13 +7,52 @@
 #include "ModulateableObject.h"
 #include "AttributesOverlay.h"
 #include "Cake.h"
+#include "ValueChangerProjectile.h"
 
 int gety(int x) {
-    if(x > 20 && x < 80) {
-        return -50;
+    if(x < 20 || x > 480) {
+        return -120;
     }
     return 0;
 }
+
+class MyContactListener : public b2ContactListener
+{
+    void BeginContact(b2Contact* contact) override {
+
+        ModulateableObject* modObject = nullptr;
+        ValueChangerProjectile* changer = nullptr;
+
+
+        void* dataA = contact->GetFixtureA()->GetBody()->GetUserData();
+        void* dataB = contact->GetFixtureB()->GetBody()->GetUserData();
+
+        if(dataA) {
+            if(auto mod = dynamic_cast<ModulateableObject*>((GameObject*)dataA)) {
+                modObject = mod;
+            }
+            if(auto c = dynamic_cast<ValueChangerProjectile*>((GameObject*)dataA)) {
+                changer = c;
+            }
+        }
+
+        if(dataB) {
+            if(auto mod = dynamic_cast<ModulateableObject*>((GameObject*)dataB)) {
+                modObject = mod;
+            }
+            if(auto c = dynamic_cast<ValueChangerProjectile*>((GameObject*)dataB)) {
+                changer = c;
+            }
+        }
+
+        if(modObject && changer) {
+            modObject->openEditor();
+            changer->removeFromView();
+        }
+    }
+};
+
+static MyContactListener listener;
 
 LevelObject::LevelObject(IngameScene &parent) :
     m_parent(parent),
@@ -32,16 +71,14 @@ LevelObject::LevelObject(IngameScene &parent) :
     Application::get().getWindow().getRenderWindow().setView(m_view);
     m_poi = m_view.getCenter();
     m_poi.y = m_poi.y - 200;
+    m_world.SetContactListener(&listener);
 
-    m_objects.emplace_back(std::make_unique<Player>(sf::Vector2f(300, -100), &m_world));
-    m_player = dynamic_cast<Player*>(m_objects.back().get());
-    m_objects.emplace_back(std::make_unique<ModulateableObject>(this, &m_world, sf::Vector2f( 100, -80), sf::Vector2f(30, 50)));
-    m_objects.emplace_back(std::make_unique<Cake>(this, sf::Vector2f(600, -80)));
+
+    m_projectile = std::make_unique<ValueChangerProjectile>(&m_world);
 }
 
 void LevelObject::update(float delta) {
     updateCamera();
-    //moveCamera();
 
     static sf::Clock clock;
     if(clock.getElapsedTime().asSeconds() >= 1./60) {
@@ -53,6 +90,7 @@ void LevelObject::update(float delta) {
         go->update(delta);
     }
 
+    m_projectile->update(delta);
     m_terrain.update(delta);
 }
 
@@ -67,6 +105,12 @@ void LevelObject::removeOverlays() {
     for(auto target: foundElements) {
         m_objects.erase(target);
     }
+
+    m_overlays = false;
+}
+
+void LevelObject::endLevel() {
+    m_parent.nextLevel(this);
 }
 
 bool LevelObject::onEvent(sf::Event &e) {
@@ -79,14 +123,17 @@ bool LevelObject::onEvent(sf::Event &e) {
         }
     }
 
-
-
-    /*if(e.type == sf::Event::MouseButtonReleased) {
-        if(e.mouseButton.button == sf::Mouse::Button::Left) {
-            auto mousePos = Application::get().getWindow().getMousePosition();
-            m_objects.push_back(std::make_unique<TestObject>(&m_world, sf::Vector2f(mousePos.x, mousePos.y)));
+    if(e.type == sf::Event::MouseButtonReleased) {
+        if(e.mouseButton.button == sf::Mouse::Left) {
+            if(m_player && !m_overlays) {
+                auto playerPos = m_player->getPosition();
+                auto mousePos = Application::get().getWindow().getMousePosition();
+                auto target = sf::Vector2f(mousePos.x, mousePos.y);
+                m_projectile->shoot(playerPos, target, 500);
+                removeOverlays();
+            }
         }
-    }*/
+    }
 
     for(auto& go: m_objects) {
         if(go != nullptr)
@@ -94,18 +141,23 @@ bool LevelObject::onEvent(sf::Event &e) {
                 return true;
     }
 
+    if(m_projectile->onEvent(e))
+        return true;
+
     return m_terrain.onEvent(e);
 }
 
 void LevelObject::draw(sf::RenderWindow &window) {
     m_terrain.draw(window);
+    m_projectile->draw(window);
     for(auto& go: m_objects) {
         go->draw(window);
     }
 }
 
 void LevelObject::moveCamera() {
-    m_poi = m_player->getPosition();
+    if(m_player)
+        m_poi = m_player->getPosition();
 }
 
 bool LevelObject::handleZoom(sf::Event &event) {
@@ -143,6 +195,8 @@ void LevelObject::updateCamera() {
 }
 
 void LevelObject::openAttributesEditor(LevelObject::tAttributes attributes, std::function<void(tAttributes)> callback) {
+    m_projectile->removeFromView();
     removeOverlays();
     m_objects.emplace_back(std::make_unique<AttributesOverlay>(attributes, callback));
+    m_overlays = true;
 }

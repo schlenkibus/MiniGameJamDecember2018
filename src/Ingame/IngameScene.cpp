@@ -6,6 +6,9 @@
 #include "../UI/GenericReactiveLabel.h"
 #include "../UI/Overlay/Overlay.h"
 #include "../Menu/MenuScene.h"
+#include "Levels/Level1.h"
+#include "Levels/Level2.h"
+#include "Levels/Level3.h"
 
 IngameScene::IngameScene(GameWindow& parent) : GameScene(parent) {
     m_gameObjects.push_back(std::make_unique<Overlay>());
@@ -29,7 +32,7 @@ IngameScene::IngameScene(GameWindow& parent) : GameScene(parent) {
         }, sf::Vector2f(0,0)));
     }
 
-    m_gameObjects.push_back(std::make_unique<LevelObject>(*this));
+    m_gameObjects.push_back(std::make_unique<Level1>(*this));
 }
 
 LevelObject *IngameScene::getWorld() const {
@@ -38,4 +41,19 @@ LevelObject *IngameScene::getWorld() const {
             return wormworld;
     }
     return nullptr;
+}
+
+void IngameScene::nextLevel(LevelObject *current) {
+    auto currentLevelId = current->getLevelId();
+    m_gameObjects.erase(m_gameObjects.end());
+    switch(currentLevelId) {
+        case 0:
+            m_gameObjects.emplace_back(std::make_unique<Level2>(*this));
+            break;
+        case 1:
+            m_gameObjects.emplace_back(std::make_unique<Level3>(*this));
+            break;
+        default:
+            m_gameObjects.emplace_back(std::make_unique<Level1>(*this));
+    }
 }

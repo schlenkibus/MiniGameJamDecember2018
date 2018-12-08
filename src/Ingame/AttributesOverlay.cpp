@@ -33,6 +33,10 @@ AttributesOverlay::AttributesOverlay(LevelObject::tAttributes attributes, std::f
         return false;
     }, [] (float delta, Button& b) {
     });
+
+    background.setPosition(x - 50, y - 50);
+    background.setSize({300, 400});
+    background.setFillColor(sf::Color(46, 255, 0, 127));
 }
 
 void AttributesOverlay::addAttributeLine(std::string key, std::string value) {
@@ -51,6 +55,7 @@ void AttributesOverlay::addAttributeLine(std::string key, std::string value) {
 }
 
 void AttributesOverlay::draw(sf::RenderWindow &window) {
+    window.draw(background);
     for(auto& t: m_text) {
         window.draw(std::get<0>(t));
         std::get<1>(t).draw(window);

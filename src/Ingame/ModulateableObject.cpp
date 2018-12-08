@@ -18,19 +18,14 @@ void ModulateableObject::update(float delta) {
     m_drawShape.setRotation((int)(m_body->GetAngle() * 57.29578f));
 }
 
-bool ModulateableObject::onEvent(sf::Event &e) {
-    if(e.KeyReleased) {
-        if(e.key.code == sf::Keyboard::G) {
-            static sf::Clock t;
-            if(t.getElapsedTime().asSeconds() > 1) {
-                m_parent->openAttributesEditor(getAttributes(), [this](tAttributes newAttributes) {
-                    setAttributes(newAttributes);
-                });
-                t.restart();
-            }
+void ModulateableObject::openEditor() {
 
-        }
-    }
+    m_parent->openAttributesEditor(getAttributes(), [this](tAttributes newAttributes) {
+        setAttributes(newAttributes);
+    });
+}
+
+bool ModulateableObject::onEvent(sf::Event &e) {
     return GameObject::onEvent(e);
 }
 
@@ -69,6 +64,7 @@ void ModulateableObject::init() {
     m_drawShape.setPosition(sf::Vector2f(po.x, po.y));
     m_drawShape.setRotation((int)(m_body->GetAngle() / 57.29578f) % 360);
     m_body->SetType(pysics ? b2_dynamicBody : b2_staticBody);
+    m_body->SetUserData(this);
 }
 
 void ModulateableObject::setAttributes(const ModulateableObject::tAttributes &attributes) {
@@ -82,6 +78,8 @@ void ModulateableObject::setAttributes(const ModulateableObject::tAttributes &at
                 try {
                     auto w = std::stoi(attributes.at("w"));
                     auto h = std::stoi(attributes.at("h"));
+                    h = std::max(2, h);
+                    w = std::max(2, w);
                     if(m_body != nullptr && m_fixture != nullptr)
                         m_body->DestroyFixture(m_fixture);
                     m_shape.SetAsBox(w / 2, h / 2);

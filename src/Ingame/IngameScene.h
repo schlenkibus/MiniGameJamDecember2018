@@ -7,4 +7,5 @@ class IngameScene : public GameScene {
 public:
     explicit IngameScene(GameWindow& parent);
     LevelObject* getWorld() const;
+    void nextLevel(LevelObject* current);
 };

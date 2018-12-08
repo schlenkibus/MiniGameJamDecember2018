@@ -16,6 +16,7 @@ public:
     void draw(sf::RenderWindow& window) override;
     const tAttributes& getAttributes();
     void setAttributes(const tAttributes& attributes);
+    void openEditor();
 protected:
     void init();
     tAttributes m_attributes;

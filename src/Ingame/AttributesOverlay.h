@@ -14,6 +14,7 @@ class AttributesOverlay : public GameObject {
         void update(float deltaTime) override;
         bool onEvent(sf::Event& event) override;
     protected:
+        sf::RectangleShape background;
         std::function<void(LevelObject::tAttributes)> cb;
         sf::Font& m_font;
         LevelObject::tAttributes m_attributes;
