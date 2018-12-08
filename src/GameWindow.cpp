@@ -1,6 +1,6 @@
 #include "GameWindow.h"
 
-GameWindow::GameWindow(unsigned int w, unsigned int h) : m_window(sf::VideoMode(w, h), "Wurms", sf::Style::Default) {
+GameWindow::GameWindow(unsigned int w, unsigned int h) : m_window(sf::VideoMode(w, h), "BMGJ", sf::Style::Fullscreen) {
 
 }
 

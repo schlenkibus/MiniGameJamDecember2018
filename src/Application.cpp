@@ -1,7 +1,7 @@
 #include "Application.h"
 #include "Menu/MenuScene.h"
 
-Application::Application() : m_window(800, 600) {
+Application::Application() : m_window(1366, 768) {
     m_window.setScene<MenuScene>();
 }
 
