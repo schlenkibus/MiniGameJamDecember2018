@@ -14,15 +14,15 @@ public:
     void update(float delta) override;
     bool onEvent(sf::Event& e) override;
     void draw(sf::RenderWindow& window) override;
-    const tAttributes& getAttributes() const;
+    const tAttributes& getAttributes();
     void setAttributes(const tAttributes& attributes);
 protected:
     void init();
     tAttributes m_attributes;
     sf::RectangleShape m_drawShape;
-    b2World* m_world;
-    b2Body* m_body;
-    b2Fixture* m_fixture;
+    b2World* m_world = nullptr;
+    b2Body* m_body = nullptr;
+    b2Fixture* m_fixture = nullptr;
     b2PolygonShape m_shape;
-    LevelObject* m_parent;
+    LevelObject* m_parent = nullptr;
 };

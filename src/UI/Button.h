@@ -16,6 +16,9 @@ public:
     void update(float d) override;
     bool onEvent(sf::Event& e) override;
     void highlight(bool highlight);
+    const bool isHighlighted() const {
+        return m_hightlight;
+    }
     const bool containsPosition(const sf::Vector2i& pos) const;
     void setText(std::string text);
 protected:
@@ -26,5 +29,6 @@ protected:
     std::function<bool(sf::Event&, Button&)> m_eventCallBack;
     std::function<void(float, Button&)> m_updateCallBack;
 
+    bool m_hightlight = false;
     void fitToText();
 };

@@ -5,9 +5,11 @@
 #include "../GameObject.h"
 #include "Details/TerrainObject.h"
 #include <functional>
+#include <iostream>
 
 class IngameScene;
 class Player;
+class AttributesOverlay;
 
 class LevelObject : public GameObject {
 public:
@@ -18,6 +20,13 @@ public:
     bool onEvent(sf::Event& e) override;
     void draw(sf::RenderWindow& window) override;
     void openAttributesEditor(tAttributes, std::function<void(tAttributes)> callback);
+    void removeOverlays();
+    Player* getPlayer() const {
+        return m_player;
+    }
+    void endLevel() {
+        std::cout << "Level done!\n";
+    }
 protected:
     b2World m_world;
     void onResize(sf::Event& resizeEvent) override;

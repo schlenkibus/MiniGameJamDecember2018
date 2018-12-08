@@ -18,6 +18,7 @@ Button::Button(sf::Vector2f pos, std::string text,
 
     m_shape.setFillColor(sf::Color::Transparent);
     m_shape.setOutlineColor(sf::Color::Red);
+    //highlight(containsPosition(Application::get().getWindow().getMousePosition()));
 }
 
 void Button::draw(sf::RenderWindow &window) {
@@ -50,7 +51,8 @@ void Button::fitToText() {
 }
 
 void Button::highlight(bool highlight) {
-    m_shape.setOutlineThickness(static_cast<float>(highlight ? 2 : 1));
+    m_shape.setOutlineThickness(static_cast<float>(highlight ? 4 : 2));
+    m_hightlight = highlight;
 }
 
 const bool Button::containsPosition(const sf::Vector2i& pos) const {

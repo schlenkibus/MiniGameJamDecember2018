@@ -21,9 +21,14 @@ void ModulateableObject::update(float delta) {
 bool ModulateableObject::onEvent(sf::Event &e) {
     if(e.KeyReleased) {
         if(e.key.code == sf::Keyboard::G) {
-            m_parent->openAttributesEditor(getAttributes(), [this](tAttributes newAttributes) {
-                setAttributes(newAttributes);
-            });
+            static sf::Clock t;
+            if(t.getElapsedTime().asSeconds() > 1) {
+                m_parent->openAttributesEditor(getAttributes(), [this](tAttributes newAttributes) {
+                    setAttributes(newAttributes);
+                });
+                t.restart();
+            }
+
         }
     }
     return GameObject::onEvent(e);
@@ -33,7 +38,9 @@ void ModulateableObject::draw(sf::RenderWindow &window) {
     window.draw(m_drawShape);
 }
 
-const ModulateableObject::tAttributes &ModulateableObject::getAttributes() const {
+const ModulateableObject::tAttributes &ModulateableObject::getAttributes() {
+    m_attributes["x"] = std::to_string((int)m_body->GetTransform().p.x);
+    m_attributes["y"] = std::to_string((int)m_body->GetTransform().p.y);
     return m_attributes;
 }
 
@@ -65,13 +72,16 @@ void ModulateableObject::init() {
 }
 
 void ModulateableObject::setAttributes(const ModulateableObject::tAttributes &attributes) {
+    m_attributes["x"] = std::to_string((int)m_body->GetTransform().p.x);
+    m_attributes["y"] = std::to_string((int)m_body->GetTransform().p.y);
+
     for(const auto&[key, oldValue]: m_attributes) {
-        auto newValue = attributes[key];
+        const auto &newValue = attributes.at(key);
         if(oldValue != newValue) {
             if(key == "w" || key == "h") {
                 try {
-                    auto w = std::stoi(attributes["w"]);
-                    auto h = std::stoi(attributes["h"]);
+                    auto w = std::stoi(attributes.at("w"));
+                    auto h = std::stoi(attributes.at("h"));
                     if(m_body != nullptr && m_fixture != nullptr)
                         m_body->DestroyFixture(m_fixture);
                     m_shape.SetAsBox(w / 2, h / 2);
@@ -88,8 +98,8 @@ void ModulateableObject::setAttributes(const ModulateableObject::tAttributes &at
                 }
             } else if(key == "x" || key == "y") {
                 try {
-                    auto x = std::stoi(attributes["x"]);
-                    auto y = std::stoi(attributes["y"]);
+                    auto x = std::stoi(attributes.at("x"));
+                    auto y = std::stoi(attributes.at("y"));
                     m_body->SetTransform(b2Vec2(x, y), m_body->GetAngle());
                     m_attributes["x"] = std::to_string((int)x);
                     m_attributes["y"] = std::to_string((int)y);
@@ -102,4 +112,5 @@ void ModulateableObject::setAttributes(const ModulateableObject::tAttributes &at
             }
         }
     }
+    m_body->SetAwake(true);
 }

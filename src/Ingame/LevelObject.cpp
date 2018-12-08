@@ -5,18 +5,27 @@
 #include "Details/TestObject.h"
 #include "Player.h"
 #include "ModulateableObject.h"
+#include "AttributesOverlay.h"
+#include "Cake.h"
+
+int gety(int x) {
+    if(x > 20 && x < 80) {
+        return -50;
+    }
+    return 0;
+}
 
 LevelObject::LevelObject(IngameScene &parent) :
     m_parent(parent),
     m_terrain(&m_world, []() {
         std::vector<b2Vec2> ret;
-        ret.reserve(100);
-        ret.emplace_back(b2Vec2(0, 50));
-        for(int x = 1; x < 99; x++) {
-            auto y = x > 20 && x < 80 ? -30 : 0;
+        ret.reserve(500);
+        ret.emplace_back(b2Vec2(0, 5000));
+        for(int x = 1; x < 499; x++) {
+            auto y = gety(x);
             ret.emplace_back(b2Vec2(x * 5, y));
         }
-        ret.emplace_back(b2Vec2(99 * 5, 50));
+        ret.emplace_back(b2Vec2(499 * 5, 5000));
         return ret;
     }()),
     m_world(b2Vec2(0, 9.81f)) {
@@ -26,7 +35,8 @@ LevelObject::LevelObject(IngameScene &parent) :
 
     m_objects.emplace_back(std::make_unique<Player>(sf::Vector2f(300, -100), &m_world));
     m_player = dynamic_cast<Player*>(m_objects.back().get());
-    m_objects.emplace_back(std::make_unique<ModulateableObject>(this, &m_world, sf::Vector2f( 100, -60), sf::Vector2f(30, 50)));
+    m_objects.emplace_back(std::make_unique<ModulateableObject>(this, &m_world, sf::Vector2f( 100, -80), sf::Vector2f(30, 50)));
+    m_objects.emplace_back(std::make_unique<Cake>(this, sf::Vector2f(600, -80)));
 }
 
 void LevelObject::update(float delta) {
@@ -46,23 +56,42 @@ void LevelObject::update(float delta) {
     m_terrain.update(delta);
 }
 
+void LevelObject::removeOverlays() {
+    typedef decltype(m_objects.begin()) tIt;
+    std::vector<tIt> foundElements;
+    for(auto it = m_objects.begin(); it != m_objects.end(); it++) {
+        if(dynamic_cast<AttributesOverlay*>(it->get()))
+            foundElements.emplace_back(it);
+    }
+
+    for(auto target: foundElements) {
+        m_objects.erase(target);
+    }
+}
+
 bool LevelObject::onEvent(sf::Event &e) {
     moveCamera();
 
     if(e.type == sf::Event::KeyReleased) {
         handleZoom(e);
+        if(e.key.code == sf::Keyboard::Escape) {
+            removeOverlays();
+        }
     }
 
-    if(e.type == sf::Event::MouseButtonReleased) {
+
+
+    /*if(e.type == sf::Event::MouseButtonReleased) {
         if(e.mouseButton.button == sf::Mouse::Button::Left) {
             auto mousePos = Application::get().getWindow().getMousePosition();
             m_objects.push_back(std::make_unique<TestObject>(&m_world, sf::Vector2f(mousePos.x, mousePos.y)));
         }
-    }
+    }*/
 
     for(auto& go: m_objects) {
-        if(go->onEvent(e))
-            return true;
+        if(go != nullptr)
+            if(go->onEvent(e))
+                return true;
     }
 
     return m_terrain.onEvent(e);
@@ -113,6 +142,7 @@ void LevelObject::updateCamera() {
     }
 }
 
-void LevelObject::openAttributesEditor(LevelObject::tAttributes, std::function<void(tAttributes)> callback) {
-    
+void LevelObject::openAttributesEditor(LevelObject::tAttributes attributes, std::function<void(tAttributes)> callback) {
+    removeOverlays();
+    m_objects.emplace_back(std::make_unique<AttributesOverlay>(attributes, callback));
 }
