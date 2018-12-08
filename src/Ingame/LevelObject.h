@@ -1,19 +1,23 @@
 #pragma once
 
 #include <SFML/Window/Event.hpp>
+#include <unordered_map>
 #include "../GameObject.h"
 #include "Details/TerrainObject.h"
+#include <functional>
 
 class IngameScene;
 class Player;
 
 class LevelObject : public GameObject {
 public:
+    typedef std::unordered_map<std::string, std::string> tAttributes;
     explicit LevelObject(IngameScene& parent);
 
     void update(float delta) override;
     bool onEvent(sf::Event& e) override;
     void draw(sf::RenderWindow& window) override;
+    void openAttributesEditor(tAttributes, std::function<void(tAttributes)> callback);
 protected:
     b2World m_world;
     void onResize(sf::Event& resizeEvent) override;

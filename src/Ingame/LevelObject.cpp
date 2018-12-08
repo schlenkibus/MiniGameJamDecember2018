@@ -4,6 +4,7 @@
 #include "../Application.h"
 #include "Details/TestObject.h"
 #include "Player.h"
+#include "ModulateableObject.h"
 
 LevelObject::LevelObject(IngameScene &parent) :
     m_parent(parent),
@@ -25,6 +26,7 @@ LevelObject::LevelObject(IngameScene &parent) :
 
     m_objects.emplace_back(std::make_unique<Player>(sf::Vector2f(300, -100), &m_world));
     m_player = dynamic_cast<Player*>(m_objects.back().get());
+    m_objects.emplace_back(std::make_unique<ModulateableObject>(this, &m_world, sf::Vector2f( 100, -60), sf::Vector2f(30, 50)));
 }
 
 void LevelObject::update(float delta) {
@@ -109,4 +111,8 @@ void LevelObject::updateCamera() {
         Application::get().getWindow().getRenderWindow().setView(m_view);
         throttle.restart();
     }
+}
+
+void LevelObject::openAttributesEditor(LevelObject::tAttributes, std::function<void(tAttributes)> callback) {
+    
 }
