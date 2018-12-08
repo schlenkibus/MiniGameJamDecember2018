@@ -5,6 +5,7 @@
 #include "Details/TerrainObject.h"
 
 class IngameScene;
+class Player;
 
 class LevelObject : public GameObject {
 public:
@@ -18,6 +19,7 @@ protected:
     void onResize(sf::Event& resizeEvent) override;
     IngameScene& m_parent;
     TerrainObject m_terrain;
+    Player* m_player;
     //Water m_water;
     sf::View m_view;
     sf::Vector2f m_poi;

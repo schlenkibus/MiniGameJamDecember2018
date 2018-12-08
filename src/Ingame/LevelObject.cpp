@@ -3,6 +3,7 @@
 #include "IngameScene.h"
 #include "../Application.h"
 #include "Details/TestObject.h"
+#include "Player.h"
 
 LevelObject::LevelObject(IngameScene &parent) :
     m_parent(parent),
@@ -17,10 +18,13 @@ LevelObject::LevelObject(IngameScene &parent) :
         ret.emplace_back(b2Vec2(99 * 5, 50));
         return ret;
     }()),
-    m_world(b2Vec2(0, 98.1f)) {
+    m_world(b2Vec2(0, 9.81f)) {
     Application::get().getWindow().getRenderWindow().setView(m_view);
     m_poi = m_view.getCenter();
     m_poi.y = m_poi.y - 200;
+
+    m_objects.emplace_back(std::make_unique<Player>(sf::Vector2f(300, -100), &m_world));
+    m_player = dynamic_cast<Player*>(m_objects.back().get());
 }
 
 void LevelObject::update(float delta) {
@@ -70,49 +74,23 @@ void LevelObject::draw(sf::RenderWindow &window) {
 }
 
 void LevelObject::moveCamera() {
-    static sf::Clock throttler;
-    if(throttler.getElapsedTime().asSeconds() < 0.01)
-        return;
-    throttler.restart();
-
-
-    sf::View view = Application::get().getWindow().getRenderWindow().getView();
-    auto& window = Application::get().getWindow().getRenderWindow();
-    auto mousePos = Application::get().getWindow().getMousePositionRelativeToWindow();
-
-    const bool rightBorder = mousePos.x > window.getSize().x - 50;
-    const bool leftBorder = mousePos.x < 50;
-    const bool topBorder = mousePos.y < 50;
-    const bool bottomBorder = mousePos.y > window.getSize().y - 50;
-
-    auto moveFactor = 4 * m_zoom;
-
-
-    if(rightBorder)
-        m_poi.x += moveFactor;
-    if(leftBorder)
-        m_poi.x -= moveFactor;
-    if(topBorder)
-        m_poi.y -= moveFactor;
-    if(bottomBorder)
-        m_poi.y += moveFactor;
+    m_poi = m_player->getPosition();
 }
 
 bool LevelObject::handleZoom(sf::Event &event) {
-    sf::View view = Application::get().getWindow().getRenderWindow().getView();
 
     if(event.key.code == sf::Keyboard::PageDown) {
         m_zoom *= 2;
-        view.zoom(2);
+        m_view.zoom(2);
     } else if(event.key.code == sf::Keyboard::PageUp) {
         m_zoom *= 0.5;
-        view.zoom(0.5f);
+        m_view.zoom(0.5f);
     } else {
         return false;
     }
 
     auto& window = Application::get().getWindow().getRenderWindow();
-    window.setView(view);
+    window.setView(m_view);
     return true;
 }
 
@@ -125,8 +103,8 @@ void LevelObject::updateCamera() {
     if(throttle.getElapsedTime().asSeconds() > 0.01) {
         auto y = m_view.getCenter().y;
         auto x = m_view.getCenter().x;
-        float newX = static_cast<float>(x + (m_poi.x - x) * 0.1);
-        float newY = static_cast<float>(y + (m_poi.y - y) * 0.1);
+        auto newX = static_cast<float>(x + (m_poi.x - x) * 0.01);
+        auto newY = static_cast<float>(y + (m_poi.y - y) * 0.01);
         m_view.setCenter(newX, newY);
         Application::get().getWindow().getRenderWindow().setView(m_view);
         throttle.restart();
